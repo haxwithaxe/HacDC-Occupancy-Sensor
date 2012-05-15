@@ -4,11 +4,17 @@ import threading
 import pytty
 import json
 from util import *
+from config import config as configmod()
+
+config = configmod()
+socketdict = config.socketdict
+config = config.config
 
 class serial(threading.Thread):
    def __init__(self,stateflag):
-      cache = json.loads(file2str(CACHE,'r'))
-		self.config = config()
+      cache = json.loads(file2str(config['status_cache'],'r'))
+		self.config = config
+		self.socketlist = []
       self.state = None
 		self.stateflag = stateflag
       self.since = cache['since']
@@ -48,18 +54,19 @@ class serial(threading.Thread):
 		# end while
       return
 
-	def _get_status_str():
-		statdict = {'default':self.config.default_msg_fmt,'full':self.config.full_msg_fmt,'raw':self.config.raw_msg_fmt}
-		statdict['default'] = statdict['default'] % ({True:'open',False:'closed'}[self.boolstate],time.strptime(self.since,self.config.stash_time_fmt).strftime(self.config.default_time_fmt))
+	def _get_status_str(self):
+		statdict = {'default':self.config['default_msg_fmt'],'full':self.config['full_msg_fmt'],'raw':self.config['raw_msg_fmt']}
+		statdict['default'] = statdict['default'] % ({True:'open',False:'closed'}[self.boolstate],time.strptime(self.since,self.config['stash_time_fmt']).strftime(self.config['default_time_fmt']))
 		statdict['full'] = statdict['full'] % ({True:'open',False:'closed'}[self.state['hall_light']],{True:'open',False:'closed'}[self.state['main_light']],{True:'open',False:'closed'}[self.state['work_light']])
 
-	def pushupdate():
-		str2file(self.config.status_file,self._get_status_str())
-		socketdict = self.config.statussocket
-		sock = connect_to_socket(socketdict)
-		if sock:
-			sock.send(self.config.update_flag)
-			sock.close()
+	def pushupdate(self):
+		str2file(self.config['status_cache'],self._get_status_str())
+		for sock in self.socketlist:
+				sock.send(self.config['update_flag'])
+
+	def loadsockets(self):
+		for sock in socketdict.values():
+			self.socketlist += [comms.server(sock)]
 
 	def die(self):
 		self.stopnow = True

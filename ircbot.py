@@ -1,33 +1,11 @@
-#! /usr/bin/env python
-#
-# Example program using ircbot.py.
-#
-# Joel Rosdahl <joel@rosdahl.net>
-
-"""A simple example bot.
-
-This is an example bot that uses the SingleServerIRCBot class from
-ircbot.py.  The bot enters a channel and listens for commands in
-private messages and channel traffic.  Commands in channel messages
-are given by prefixing the text by the bot name followed by a colon.
-It also responds to DCC CHAT invitations and echos data sent in such
-sessions.
-
-The known commands are:
-
-	stats -- Prints some channel information.
-
-	disconnect -- Disconnect the bot.  The bot will try to reconnect
-				  after 60 seconds.
-
-	die -- Let the bot cease to exist.
-
-	dcc -- Let the bot invite you to a DCC CHAT connection.
-"""
+#!/usr/bin/env python3
 
 import sys
 import threading
+import comms
 from util import *
+from botutil import *
+from config import config as configmod
 from ircbot import SingleServerIRCBot
 from irclib import nm_to_n, nm_to_h, irc_lower, ip_numstr_to_quad, ip_quad_to_numstr, is_channel
 
@@ -39,12 +17,15 @@ HELPMSG = {
 	'space':'usage: .space [full|raw]'
 	}
 CHANNEL = ''
-globalbotconfig = {}
+config = configmod()
+socketdict = config.socketdict
+config = config.config
 BOSSLIST = ['haxwithaxe']
+SOCKNAME = 'ircbot.sock'
 
 class HacDCBot(threading.Thread):
 	def run(self):
-		self.bot = SingleThreadBot(globalbotconfig)
+		self.bot = SingleThreadBot()
 		self.bot.start()
 
 	def die(self):
@@ -52,9 +33,10 @@ class HacDCBot(threading.Thread):
 		self._Thread__stop()
 
 class SingleThreadBot(SingleServerIRCBot):
-	def __init__(self, config):
-		SingleServerIRCBot.__init__(self, [(config['server'], config['port'])], config['nick'], config['nick'])
-		self.channel = config['channel']
+	def __init__(self):
+		SingleServerIRCBot.__init__(self, [(config['irc.server'], config['irc.port'])], config['irc.nick'], config['irc.nick'])
+		self.channel = config['irc.channel']
+		self.comm = comms.client(config['client.irc'])
 
 	def on_nicknameinuse(self, c, e):
 		c.nick(c.get_nickname() + "_")
@@ -141,7 +123,7 @@ class SingleThreadBot(SingleServerIRCBot):
 		return
 
 	def _isboss(self,nick):
-		if nick in BOSSLIST:
+		if nick in config['boss_list']:
 			return True
 		return False
 
@@ -201,15 +183,6 @@ class SingleThreadBot(SingleServerIRCBot):
 
 
 def main():
-	server = 'irc.freenode.net'
-	port = 6667
-	channel = '#hacdc-bot'
-	nickname = 'occsensor'
-
-	global CHANNEL
-	CHANNEL = channel
-	global globalbotconfig
-	globalbotconfig = {'channel':channel, 'nick':nickname, 'server':server, 'port':port}
 	bot = HacDCBot()
 	bot.start()
 	while True:

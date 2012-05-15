@@ -1,18 +1,13 @@
-#! /usr/bin/env python
+#!/usr/bin/env python3
 
 import sys
 import threading
-from hacdc import *
+import ircbot
+from util import *
 
 class serivice(threading.Thread):
 	def _init_irc(self):
-		server = 'irc.freenode.net'
-		port = 6667
-		channel = '#hacdc-bot'
-		nickname = 'occsensor'
-		global globalbotconfig
-		globalbotconfig = {'channel':channel, 'nick':nickname, 'server':server, 'port':port}
-		bot = NeedleBot()
+		bot = ircbot.HacDCBot()
 		return
 
 	def _init_twitter(self):
