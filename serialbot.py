@@ -11,12 +11,11 @@ socketdict = config.socketdict
 config = config.config
 
 class serial(threading.Thread):
-   def __init__(self,stateflag):
+   def __init__(self):
       cache = json.loads(file2str(config['status_cache'],'r'))
 		self.config = config
 		self.socketlist = []
       self.state = None
-		self.stateflag = stateflag
       self.since = cache['since']
       self.smstate = cache['status']
       self.lastmsg = None
@@ -71,3 +70,7 @@ class serial(threading.Thread):
 	def die(self):
 		self.stopnow = True
 		self._Thread__stop()
+
+if __name__ == '__main__':
+	bot = serial()
+	bot.start()

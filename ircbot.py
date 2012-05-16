@@ -25,8 +25,14 @@ SOCKNAME = 'ircbot.sock'
 
 class HacDCBot(threading.Thread):
 	def run(self):
+		self.sock = comms.client(config['client.irc'])
 		self.bot = SingleThreadBot()
+		ups = update_on_change(self.bot)
+		ups.start()
 		self.bot.start()
+
+	def update(self):
+		self.bot.update()
 
 	def die(self):
 		self.bot.die()
@@ -35,8 +41,8 @@ class HacDCBot(threading.Thread):
 class SingleThreadBot(SingleServerIRCBot):
 	def __init__(self):
 		SingleServerIRCBot.__init__(self, [(config['irc.server'], config['irc.port'])], config['irc.nick'], config['irc.nick'])
+		self.sock = comms.client(config['client.irc'])
 		self.channel = config['irc.channel']
-		self.comm = comms.client(config['client.irc'])
 
 	def on_nicknameinuse(self, c, e):
 		c.nick(c.get_nickname() + "_")
@@ -161,7 +167,7 @@ class SingleThreadBot(SingleServerIRCBot):
 
 	def _status_msg(self, c, args = [], chan = False):
 		if not chan: chan = self.channel
-		statusdict = get_occ_status()
+		statusdict = unstash('dict')
 		if len(args) > 0:
 			arg1 = args[0].lower()
 		else:
@@ -174,6 +180,10 @@ class SingleThreadBot(SingleServerIRCBot):
 			c.privmsg(chan, statusdict['raw'])
 		return
 
+	def update(self):
+		statusdict = unstash('dict')
+		self.say(statusdict['default'])
+
 	def say(self,msg):
 		self.sayto(self.channel,msg)
 
@@ -185,6 +195,7 @@ class SingleThreadBot(SingleServerIRCBot):
 def main():
 	bot = HacDCBot()
 	bot.start()
+	update_on_change(bot)
 	while True:
 		line = raw_input().strip()
 		if len(line) > 0:

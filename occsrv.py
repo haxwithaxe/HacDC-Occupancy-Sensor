@@ -2,15 +2,25 @@
 
 import sys
 import threading
-import ircbot
+import hacdc_ircbot
 from util import *
 
-class serivice(threading.Thread):
+class service(threading.Thread):
+	def __init__(self):
+		_init_irc()
+		_init_twitter()
+		_init_serial()
+		threading.Thread.__init__(self)
 	def _init_irc(self):
-		bot = ircbot.HacDCBot()
+		self.ircbot = hacdc_ircbot.HacDCBot()
 		return
 
 	def _init_twitter(self):
+		self.tweeter = tweetbot.tweetbot()
+		return
+
+	def _init_serial(self):
+		self.serialbot = serialbot.serialbot()
 		return
 
 	def cli(self):
@@ -32,6 +42,8 @@ class serivice(threading.Thread):
 	return
 
 	def run(self):
-		self.bot.start()
+		self.serialbot.start()
+		self.ircbot.start()
+		self.tweeter.start()
 		self.cli()
 

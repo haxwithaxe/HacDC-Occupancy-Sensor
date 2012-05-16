@@ -1,11 +1,17 @@
 import twitter
+import threading
+import time
 from config import config as configmod
 from util import *
 
 config = configmod().config
 
 class tweeter:
-   def __init__(self, config['consumer_key'], config['consumer_secret'], config['access_token_key'], config['access_token_secret']):
+	def __init__(self):
+		consumer_key = config['consumer_key']
+		consumer_secret = config['consumer_secret']
+		access_token_key = config['access_token_key']
+		access_token_secret = config['access_token_secret']
 		self.tweeter = None
 		self.cantweet
       try:
@@ -19,3 +25,11 @@ class tweeter:
 	def tweet(self,msg):
 		if self.cantweet:
 			self.tweeter.PostUpdate(msg)
+
+	def update(self):
+		tweetmsg = unstash('dict')['default']
+		self.tweeter.tweet(tweetmsg)
+
+if __name__ == '__main__':
+	bot = tweeter()
+	update_on_change(bot)
