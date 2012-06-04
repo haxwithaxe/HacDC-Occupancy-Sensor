@@ -17,6 +17,7 @@ print(';'+config['access_token_secret']+';')
 class tweeter:
 	def __init__(self):
 		self.sock = comms.client(socketdict['client.twitter'])
+		self.sock.start()
 		self.tweeter = None
 		self.cantweet = False
 		try:

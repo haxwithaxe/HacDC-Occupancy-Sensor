@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 import sys
 import threading
@@ -8,12 +8,12 @@ import serialbot
 from util import *
 from botutil import *
 
-class service(threading.Thread):
+class service:
 	def __init__(self):
 		self._init_irc()
 		self._init_twitter()
 		self._init_serial()
-		threading.Thread.__init__(self)
+		self._kill_list = []
 
 	def _init_irc(self):
 		self.ircbot = hacdc_ircbot.HacDCBot()
@@ -29,7 +29,7 @@ class service(threading.Thread):
 
 	def cli(self):
 		while True:
-			line = raw_input().strip()
+			line = raw_input('occsensor>').strip()
 			if len(line) > 0:
 				cmd = line.split()[0].strip()
 				if cmd == 'say':
@@ -40,7 +40,13 @@ class service(threading.Thread):
 					self.ircbot.sayto(target,msg)
 				elif cmd == 'die':
 					self.ircbot.die()
-					break
+				elif cmd == 'refresh':
+					self.serialbot.update_cache()
+				elif cmd in ('quit','exit'):
+					for i in self._kill_list:
+						i.die()
+						i.join()
+					return
 				else:
 					print(cli_help)
 		return
@@ -48,10 +54,14 @@ class service(threading.Thread):
 	def run(self):
 		self.serialbot.start()
 		self.ircbot.start()
-		update_on_change(self.ircbot)
-		update_on_change(self.tweeter)
+		self._kill_list = [
+			update_on_change(self.ircbot),
+			update_on_change(self.tweeter),
+			self.ircbot,
+			self.serialbot
+			]
 		self.cli()
 
 if __name__ == '__main__':
 	s = service()
-	s.start()
+	s.run()

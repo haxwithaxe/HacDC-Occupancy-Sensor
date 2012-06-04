@@ -1,8 +1,8 @@
-DEBUG = True
+DEBUG = 5
 
 
-def debug(msg):
-	if DEBUG:
+def debug(msg,level=1):
+	if DEBUG >= level:
 		print(msg)
 
 def file2str(fname,mode = 'r'):

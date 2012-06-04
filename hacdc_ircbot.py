@@ -26,6 +26,7 @@ class HacDCBot(SingleServerIRCBot):
 	def __init__(self):
 		SingleServerIRCBot.__init__(self, [(config['irc.server'], int(config['irc.port']))], config['irc.nick'], config['irc.nick'])
 		self.sock = comms.client(socketdict['client.irc'])
+		self.sock.start()
 		self.channel = config['irc.channel']
 
 	def on_nicknameinuse(self, c, e):
@@ -33,35 +34,36 @@ class HacDCBot(SingleServerIRCBot):
 
 	def on_welcome(self, c, e):
 		c.join(self.channel)
+		debug('joined irc',2)
 
 	def on_privmsg(self, c, e):
-		debug(('event source',e.source()))
-		debug(('event target',e.target()))
-		debug(('event arguments',e.arguments()))
+		debug(('event source',e.source()),5)
+		debug(('event target',e.target()),5)
+		debug(('event arguments',e.arguments()),5)
 		self._handle_msg(c, e)
 
 	def on_pubmsg(self, c, e):
-		debug(('event source',e.source()))
-		debug(('event target',e.target()))
-		debug(('event arguments',e.arguments()))
+		debug(('event source',e.source()),5)
+		debug(('event target',e.target()),5)
+		debug(('event arguments',e.arguments()),5)
 		self._handle_msg(c, e)
 	
 	def _handle_msg(self, c, e):
 		line = []
 		words = e.arguments()[0].split(":", 1)
-		debug(('words',words))
+		debug(('words in HacDCBot._handle_msg',words),5)
 		if len(words[0]) > 0:
 			if len(words) == 2:
 				if len(words[1]) > 0: line = [words[1].strip()]
 			word0 = words[0]
-			debug(('line post name split of _handle_msg',line))
+			debug(('line post name split of HacDCBot._handle_msg',line),5)
 			mynick = irc_lower(self.connection.get_nickname())
 			if irc_lower(word0) == mynick:
 				line += e.arguments()[1:]
 			else:
 				line = e.arguments()
 			if len(line) > 0:
-				debug(('line of _handle_msg',line))
+				debug(('line of _handle_msg',line),5)
 				self._handle_cmds(c, e, line)
 		return
 
@@ -82,7 +84,7 @@ class HacDCBot(SingleServerIRCBot):
 			self.dcc_connect(address, port)
 
 	def do_command(self, e, cmd):
-		debug(('cmd in do_command',cmd))
+		debug(('cmd in do_command',cmd),3)
 		nick = nm_to_n(e.source())
 		chan = e.target()
 		if chan == irc_lower(self.connection.get_nickname()): chan = nick
@@ -118,17 +120,17 @@ class HacDCBot(SingleServerIRCBot):
 		return False
 
 	def _handle_cmds(self, c, e, line):
-		debug('in _handle_cmds')
+		debug('in _handle_cmds',5)
 		sendhelp = False
 		chan = self.channel
 		if chan == irc_lower(self.connection.get_nickname()): chan = irc_lower(nm_to_n(e.source()))
-		debug(('chan in _handle_cmds',chan))
+		debug(('chan in _handle_cmds',chan),5)
 		cmd_args_list = line[0].lower()[1:].strip().split()
 		cmd = cmd_args_list[0]
-		debug(('cmd,line,cmd_args_list in _handle_cmds',cmd,line,cmd_args_list))
+		debug(('cmd,line,cmd_args_list in _handle_cmds',cmd,line,cmd_args_list),5)
 		args = []
 		if len(cmd_args_list) > 1: args = [x.strip() for x in cmd_args_list[1:]]
-		debug(('args in _handle_cmds',args))
+		debug(('args in _handle_cmds',args),5)
 		if len(args) > 0 and args[0].lower() in HELPSTR:
 			sendhelp = True
 			if cmd == 'space':
@@ -178,14 +180,11 @@ class HacDCBot(SingleServerIRCBot):
 		self.sayto(self.channel,msg)
 
 	def sayto(self,target,msg):
-		debug('said "'+msg+'" in "'+target+'"')
+		debug('said "'+msg+'" in "'+target+'"',3)
 		c = self.connection
 		c.privmsg(target,msg)
 
-def main():
+if __name__ == "__main__":
 	bot = HacDCBot()
 	bot.start()
 	update_on_change(bot)
-
-if __name__ == "__main__":
-	main()

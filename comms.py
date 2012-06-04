@@ -4,6 +4,7 @@ import socket
 import threading
 
 maxconnectfail = 10
+max_msg_buffer = 1000
 
 def _bool_invert(boolval):
 	if boolval:
@@ -16,14 +17,14 @@ class comm_sock(threading.Thread):
 		self.sock = socket.socket(socket.AF_UNIX,socket.SOCK_STREAM)
 		self.address = address
 		self.die = False
-		self.msg = ''
+		self.msg = []
 		threading.Thread.__init__(self)
 
 	def _send(self, msg):
 		self.conn.send(msg)
 
 	def _receve(self):
-		msg = str(self.conn.recv(1024))+'\n'
+		msg = self.conn.recv(1024)
 		return msg
 
 	def _connect(self):
@@ -34,7 +35,11 @@ class comm_sock(threading.Thread):
 			print('Failed to _connect to '+str(self.address))
 			return False
 		while not self.die:
-			self.msg += self._receve()
+			new_msg = self._receve()
+			if new_msg not in (-1,'',None):
+				if len(self.msg) > max_msg_buffer:
+					self.msg.pop(0)
+				self.msg += [new_msg]
 
 	def die(self):
 		self.sock.shutdown()
