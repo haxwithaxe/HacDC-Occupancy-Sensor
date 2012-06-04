@@ -47,12 +47,12 @@ class serial(threading.Thread):
 				if (self.boolstate != current_boolstate and self.laststate != current_boolstate):
 					debug('OCCSENSOR STATE SET: %s' % current_boolstate)
 					self.boolstate = current_boolstate
-					self.since = time.strptime('%s').strftime('%a, %b %d at %I:%M %p')
+					self.since = time.strftime(config['stash_time_fmt'])
 					self.notify = True
 
 					stash(self._get_status_str())
 
-				if self.notify and self.bot:
+				if self.notify:
 					self.notify = False
 					self.pushupdate()
 				self.laststate = current_boolstate
