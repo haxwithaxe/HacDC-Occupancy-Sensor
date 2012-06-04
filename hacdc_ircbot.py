@@ -16,6 +16,7 @@ HELPMSG = {
 	'help':'use .space to see the occupancy status of HacDC',
 	'space':'usage: .space [full|raw]'
 	}
+MISSING_DATA_MSG='''My data is missing.'''
 
 config = configmod()
 socketdict = config.socketsdict
@@ -152,25 +153,25 @@ class HacDCBot(SingleServerIRCBot):
 		msg = False
 		if not chan: chan = self.channel
 		statusdict = unstash('dict')
-		if not statusdict: msg = '''My data is missing.'''
+		if not statusdict: msg = MISSING_DATA_MSG
 		if len(args) > 0:
 			arg1 = args[0].lower()
 		else:
 			arg1 = False
 		if not msg:
 			if not arg1:
-				msg = statusdict['default']
+				msg = statusdict['default'] or MISSING_DATA_MSG
 			elif 'full' == arg1:
-				msg = statusdict['full']
+				msg = statusdict['full'] or MISSING_DATA_MSG
 			elif 'raw' == arg1:
-				msg = statusdict['raw']
+				msg = statusdict['raw'] or MISSING_DATA_MSG
 		if msg:
 			self.sayto(chan,msg)
 		return
 
 	def update(self):
 		statusdict = unstash('dict')
-		self.say(statusdict['default'] or '''My data is missing.''')
+		self.say(statusdict['default'] or MISSING_DATA_MSG)
 
 	def say(self,msg):
 		self.sayto(self.channel,msg)
