@@ -1,26 +1,31 @@
 import twitter
-import threading
 import time
+import comms
+import sys
 from config import config as configmod
 from util import *
+from botutil import *
 
-config = configmod().config
+config = configmod()
+socketdict = config.socketsdict
+config = config.config
+print(';'+config['consumer_key']+';')
+print(';'+config['consumer_secret']+';')
+print(';'+config['access_token_key']+';')
+print(';'+config['access_token_secret']+';')
 
 class tweeter:
 	def __init__(self):
-		consumer_key = config['consumer_key']
-		consumer_secret = config['consumer_secret']
-		access_token_key = config['access_token_key']
-		access_token_secret = config['access_token_secret']
+		self.sock = comms.client(socketdict['client.twitter'])
 		self.tweeter = None
-		self.cantweet
-      try:
-         self.tweeter = twitter.Api( consumer_key=consumer_key, consumer_secret=consumer_secret, access_token_key=access_token_key, access_token_secret=access_token_secret)
-         self.cantwit = self.tweet.VerifyCredentials()
-         debug('TWITTER: Can Tweet')
-      except Exception as e:
-         e = sys.exc_info()[1]
-         debug(e)
+		self.cantweet = False
+		try:
+			self.tweeter = twitter.Api( consumer_key=config['consumer_key'], consumer_secret=config['consumer_secret'], access_token_key=config['access_token_key'], access_token_secret=config['access_token_secret'])
+			self.cantwit = self.tweeter.VerifyCredentials()
+			debug('TWITTER: Can Tweet')
+		except Exception as e:
+			e = sys.exc_info()[1]
+			debug(e)
 
 	def tweet(self,msg):
 		if self.cantweet:

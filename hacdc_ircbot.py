@@ -16,32 +16,15 @@ HELPMSG = {
 	'help':'use .space to see the occupancy status of HacDC',
 	'space':'usage: .space [full|raw]'
 	}
-CHANNEL = ''
+
 config = configmod()
-socketdict = config.socketdict
+socketdict = config.socketsdict
 config = config.config
-BOSSLIST = ['haxwithaxe']
-SOCKNAME = 'ircbot.sock'
 
-class HacDCBot(threading.Thread):
-	def run(self):
-		self.sock = comms.client(config['client.irc'])
-		self.bot = SingleThreadBot()
-		ups = update_on_change(self.bot)
-		ups.start()
-		self.bot.start()
-
-	def update(self):
-		self.bot.update()
-
-	def die(self):
-		self.bot.die()
-		self._Thread__stop()
-
-class SingleThreadBot(SingleServerIRCBot):
+class HacDCBot(SingleServerIRCBot):
 	def __init__(self):
-		SingleServerIRCBot.__init__(self, [(config['irc.server'], config['irc.port'])], config['irc.nick'], config['irc.nick'])
-		self.sock = comms.client(config['client.irc'])
+		SingleServerIRCBot.__init__(self, [(config['irc.server'], int(config['irc.port']))], config['irc.nick'], config['irc.nick'])
+		self.sock = comms.client(socketdict['client.irc'])
 		self.channel = config['irc.channel']
 
 	def on_nicknameinuse(self, c, e):
@@ -166,23 +149,28 @@ class SingleThreadBot(SingleServerIRCBot):
 			c.privmsg(chan, HELPMSG[cmd])
 
 	def _status_msg(self, c, args = [], chan = False):
+		msg = False
 		if not chan: chan = self.channel
 		statusdict = unstash('dict')
+		if not statusdict: msg = '''My data is missing.'''
 		if len(args) > 0:
 			arg1 = args[0].lower()
 		else:
 			arg1 = False
-		if not arg1:
-			c.privmsg(chan, statusdict['default'])
-		elif 'full' == arg1:
-			c.privmsg(chan, statusdict['full'])
-		elif 'raw' == arg1:
-			c.privmsg(chan, statusdict['raw'])
+		if not msg:
+			if not arg1:
+				msg = statusdict['default']
+			elif 'full' == arg1:
+				msg = statusdict['full']
+			elif 'raw' == arg1:
+				msg = statusdict['raw']
+		if msg:
+			self.sayto(chan,msg)
 		return
 
 	def update(self):
 		statusdict = unstash('dict')
-		self.say(statusdict['default'])
+		self.say(statusdict['default'] or '''My data is missing.''')
 
 	def say(self,msg):
 		self.sayto(self.channel,msg)
@@ -196,21 +184,6 @@ def main():
 	bot = HacDCBot()
 	bot.start()
 	update_on_change(bot)
-	while True:
-		line = raw_input().strip()
-		if len(line) > 0:
-			cmd = line.split()[0].strip()
-			if cmd == 'say':
-				bot.bot.say(' '.join(line.split()[1:]))
-			elif cmd == 'sayto':
-				target = line.split()[1]
-				msg = ' '.join(line.split()[2:])
-				bot.bot.sayto(target,msg)
-			elif cmd == 'die':
-				bot.die()
-				bot.join()
-				break
-	return
 
 if __name__ == "__main__":
 	main()

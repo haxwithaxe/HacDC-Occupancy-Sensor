@@ -1,6 +1,7 @@
 DEBUG = True
 
 import json
+import threading
 from util import *
 from config import config as configmod
 
@@ -10,11 +11,11 @@ def get_occ_status():
 	return {'default':'fancy status (as seen on twitter)','full':'human friendly occsensor output','raw':'raw occsensor output'}
 
 def stash(cachestr):
-	str2file(config['status_cache'])
+	str2file(config['status_cache'],cachestr)
 
 def unstash(fmt = 'raw'):
 	contents = file2str(config['status_cache'])
-	if fmt == 'dict':
+	if fmt == 'dict' and len(contents) > 1:
 		output = json.loads(contents)
 	else:
 		output = contents

@@ -1,0 +1,4 @@
+occsensor.conf
+*.pyc
+*.socket
+*.cache
