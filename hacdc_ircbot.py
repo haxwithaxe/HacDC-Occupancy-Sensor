@@ -123,22 +123,23 @@ class HacDCBot(SingleServerIRCBot):
 		chan = self.channel
 		if chan == irc_lower(self.connection.get_nickname()): chan = irc_lower(nm_to_n(e.source()))
 		debug(('chan in _handle_cmds',chan))
-		cmd = line.split()[0].lower()[1:]
-		debug(('cmd in _handle_cmds',cmd))
+		cmd_args_list = line[0].lower()[1:].strip().split()
+		cmd = cmd_args_list[0]
+		debug(('cmd,line,cmd_args_list in _handle_cmds',cmd,line,cmd_args_list))
 		args = []
-		if len(line) > 1: args = [x.strip() for x in line[1:]]
+		if len(cmd_args_list) > 1: args = [x.strip() for x in cmd_args_list[1:]]
 		debug(('args in _handle_cmds',args))
 		if len(args) > 0 and args[0].lower() in HELPSTR:
 			sendhelp = True
-		if cmd == 'space':
-			if sendhelp:
-				self._send_help(c,cmd,chan)
+			if cmd == 'space':
+				if sendhelp:
+					self._send_help(c,cmd,chan)
+				else:
+					self._status_msg(c,args,chan)
+			elif cmd == 'help':
+				self._send_help(c,cmd,args,chan)
 			else:
-				self._status_msg(c,args,chan)
-		elif cmd == 'help':
-			self._send_help(c,cmd,args,chan)
-		else:
-			self.do_command(e,line[0].lower())
+				self.do_command(e,cmd.lower())
 
 	def _send_help(self, c, cmd = 'help', args = [], chan = False):
 		arg1 = False
