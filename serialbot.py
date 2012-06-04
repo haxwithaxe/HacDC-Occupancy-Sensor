@@ -17,6 +17,7 @@ class serial(threading.Thread):
 			cache = json.loads(cachestr)
 		else:
 			cache = {'since':'Wed, Jan 01 at 12:00 AM','status':False,'default':'','full':'','raw':''}
+			stash(json.dumps(cache))
 		self.config = config
 		self.socketlist = []
 		self.state = None
@@ -48,7 +49,7 @@ class serial(threading.Thread):
 					self.since = time.strptime('%s').strftime('%a, %b %d at %I:%M %p')
 					self.notify = True
 
-					stash(json.dumps({'status':current_boolstate,'since':self.since}))
+					stash(self._get_status_str())
 
 				if self.notify and self.bot:
 					self.notify = False
