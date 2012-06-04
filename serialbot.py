@@ -4,6 +4,7 @@ import threading
 import pytty
 import json
 from util import *
+from botutil import *
 from config import config as configmod
 
 config = configmod()
