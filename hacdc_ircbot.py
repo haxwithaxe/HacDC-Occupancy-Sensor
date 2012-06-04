@@ -133,15 +133,15 @@ class HacDCBot(SingleServerIRCBot):
 		debug(('args in _handle_cmds',args),5)
 		if len(args) > 0 and args[0].lower() in HELPSTR:
 			sendhelp = True
-			if cmd == 'space':
-				if sendhelp:
-					self._send_help(c,cmd,chan)
-				else:
-					self._status_msg(c,args,chan)
-			elif cmd == 'help':
-				self._send_help(c,cmd,args,chan)
+		if cmd == 'space':
+			if sendhelp:
+				self._send_help(c,cmd,chan)
 			else:
-				self.do_command(e,cmd.lower())
+				self._status_msg(c,args,chan)
+		elif cmd == 'help':
+			self._send_help(c,cmd,args,chan)
+		else:
+			self.do_command(e,cmd.lower())
 
 	def _send_help(self, c, cmd = 'help', args = [], chan = False):
 		arg1 = False
