@@ -21,7 +21,7 @@ class serial(threading.Thread):
 		self.socketlist = []
 		self.state = None
 		self.since = cache['since']
-		self.smstate = cache['status']
+		self.boolstate = cache['status']
 		self.lastmsg = None
 		self.notify = False
 		self.stopnow = False
