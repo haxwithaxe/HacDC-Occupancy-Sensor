@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 import sys
 import threading
@@ -123,7 +123,7 @@ class HacDCBot(SingleServerIRCBot):
 		chan = self.channel
 		if chan == irc_lower(self.connection.get_nickname()): chan = irc_lower(nm_to_n(e.source()))
 		debug(('chan in _handle_cmds',chan))
-		cmd = line[0].lower()[1:]
+		cmd = line.split()[0].lower()[1:]
 		debug(('cmd in _handle_cmds',cmd))
 		args = []
 		if len(line) > 1: args = [x.strip() for x in line[1:]]
@@ -177,9 +177,9 @@ class HacDCBot(SingleServerIRCBot):
 		self.sayto(self.channel,msg)
 
 	def sayto(self,target,msg):
+		debug('said "'+msg+'" in "'+target+'"')
 		c = self.connection
 		c.privmsg(target,msg)
-
 
 def main():
 	bot = HacDCBot()
