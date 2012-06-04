@@ -22,7 +22,7 @@ class serial(threading.Thread):
 		self.state = None
 		self.since = cache['since']
 		self.boolstate = cache['status']
-		self.lastmsg = None
+		self.laststate = None
 		self.notify = False
 		self.stopnow = False
 		self.tty = pytty.TTY(self.config['serial.device'])
@@ -42,7 +42,7 @@ class serial(threading.Thread):
 				self.state = rawmsgdict
 				current_boolstate = (0 < (self.state['hall_light'] + self.state['main_light'] + self.state['work_light'])) #+ self.state['main_pir'] + self.state['work_pir']
 
-				if (self.boolstate != current_boolstate and self.lastmsg != current_boolstate):
+				if (self.boolstate != current_boolstate and self.laststate != current_boolstate):
 					debug('OCCSENSOR STATE SET: %s' % current_boolstate)
 					self.boolstate = current_boolstate
 					self.since = time.strptime('%s').strftime('%a, %b %d at %I:%M %p')
@@ -53,7 +53,7 @@ class serial(threading.Thread):
 				if self.notify and self.bot:
 					self.notify = False
 					self.pushupdate()
-				self.lastmsg = tmp
+				self.laststate = current_boolstate
 		# end while
 		return
 
