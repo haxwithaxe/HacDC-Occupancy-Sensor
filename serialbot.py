@@ -3,6 +3,7 @@ import time
 import threading
 import pytty
 import json
+import comms
 from util import *
 from botutil import *
 from config import config as configmod
