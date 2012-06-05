@@ -131,7 +131,7 @@ class HacDCBot(SingleServerIRCBot):
 		args = []
 		if len(cmd_args_list) > 1: args = [x.strip() for x in cmd_args_list[1:]]
 		debug(('args in _handle_cmds',args),5)
-		if len(args) > 0 and args[0].lower() in HELPSTR:
+		if len(args) > 1 and args[1] in HELPSTR:
 			sendhelp = True
 		if cmd == 'space':
 			if sendhelp:
@@ -142,6 +142,18 @@ class HacDCBot(SingleServerIRCBot):
 			self._send_help(c,cmd,args,chan)
 		else:
 			self.do_command(e,cmd.lower())
+
+	def _handle_sock_cmd(self,cmd,args):
+		if cmd == 'say':
+			self.say(' '.join(args))
+		elif cmd == 'sayto' and len(args) > 1:
+			self.sayto(args[0],' '.join(args[1:]))
+		elif cmd == 'die':
+			self.die()
+		elif cmd == 'cycle':
+			pass
+		elif cmd == 'reconnect':
+			self.connection.reconnect()
 
 	def _send_help(self, c, cmd = 'help', args = [], chan = False):
 		arg1 = False
@@ -175,6 +187,12 @@ class HacDCBot(SingleServerIRCBot):
 	def update(self):
 		statusdict = unstash('dict')
 		self.say(statusdict['default'] or MISSING_DATA_MSG)
+
+	def pass_msg(self,msg):
+		bits = msg.split()
+		cmd = bits[0]
+		args = bits[1:]
+		self._handle_sock_cmd(cmd,args)
 
 	def say(self,msg):
 		self.sayto(self.channel,msg)

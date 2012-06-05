@@ -9,10 +9,6 @@ from botutil import *
 config = configmod()
 socketdict = config.socketsdict
 config = config.config
-print(';'+config['consumer_key']+';')
-print(';'+config['consumer_secret']+';')
-print(';'+config['access_token_key']+';')
-print(';'+config['access_token_secret']+';')
 
 class tweeter:
 	def __init__(self):
@@ -35,6 +31,9 @@ class tweeter:
 	def update(self):
 		tweetmsg = unstash('dict')['default']
 		self.tweeter.tweet(tweetmsg)
+	
+	def pass_msg(self,cmd,args):
+		pass
 
 if __name__ == '__main__':
 	bot = tweeter()

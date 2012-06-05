@@ -41,6 +41,9 @@ class comm_sock(threading.Thread):
 					self.msg.pop(0)
 				self.msg += [new_msg]
 
+	def clear_msg(self):
+		self.msg = []
+
 	def die(self):
 		self.sock.shutdown()
 		self.die = True

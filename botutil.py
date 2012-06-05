@@ -28,8 +28,13 @@ class _update_on_change(threading.Thread):
 	def run(self):
 		while not self.die:
 			msg = self.sock.msg[:]
+			self.sock.clear_msg()
 			if config['update_flag'] in [x.strip() for x in msg]:
 				self.bot.update()
+			for m in msg:
+				if m.strip().startswith('pass:'):
+					bot.pass_msg(m.replace('pass:',1).strip())
+
 	def die(self):
 		self.die = True
 		self._Thread__stop()

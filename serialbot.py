@@ -21,6 +21,8 @@ class serial(threading.Thread):
 			cache = {'changed':'','status':False,'default':'','full':'','raw':''}
 			stash(json.dumps(cache))
 		self.config = config
+		self.con_sock = comms.server(config['serial.console'])
+		self.con_sock.start()
 		self.socketlist = []
 		self.state = None
 		self.changed = cache['changed'] or time.strftime(config['change_time_fmt'])
