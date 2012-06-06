@@ -1,6 +1,5 @@
 import twitter
 import time
-import comms
 import sys
 from config import config as configmod
 from util import *
@@ -12,8 +11,6 @@ config = config.config
 
 class tweeter:
 	def __init__(self):
-		self.sock = comms.client(socketdict['client.twitter'])
-		self.sock.start()
 		self.tweeter = None
 		self.cantweet = False
 		try:

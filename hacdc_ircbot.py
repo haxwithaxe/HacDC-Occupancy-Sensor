@@ -2,7 +2,6 @@
 
 import sys
 import threading
-import comms
 from util import *
 from botutil import *
 from config import config as configmod
@@ -18,15 +17,11 @@ HELPMSG = {
 	}
 MISSING_DATA_MSG='''My data is missing.'''
 
-config = configmod()
-socketdict = config.socketsdict
-config = config.config
+config = configmod().config
 
 class HacDCBot(SingleServerIRCBot):
 	def __init__(self):
 		SingleServerIRCBot.__init__(self, [(config['irc.server'], int(config['irc.port']))], config['irc.nick'], config['irc.nick'])
-		self.sock = comms.client(socketdict['client.irc'])
-		self.sock.start()
 		self.channel = config['irc.channel']
 
 	def on_nicknameinuse(self, c, e):
@@ -185,6 +180,7 @@ class HacDCBot(SingleServerIRCBot):
 		return
 
 	def update(self):
+		print('update')
 		statusdict = unstash('dict')
 		self.say(statusdict['default'] or MISSING_DATA_MSG)
 
@@ -194,6 +190,9 @@ class HacDCBot(SingleServerIRCBot):
 		args = bits[1:]
 		self._handle_sock_cmd(cmd,args)
 
+	def cycle(self):
+		pass
+
 	def say(self,msg):
 		self.sayto(self.channel,msg)
 
@@ -202,7 +201,37 @@ class HacDCBot(SingleServerIRCBot):
 		c = self.connection
 		c.privmsg(target,msg)
 
+class _RunThreaded(threading.Thread):
+	def __init__(self,bot):
+		self.bot = bot
+		threading.Thread.__init__(self)
+
+	def run(self):
+		self.bot.start()
+
 if __name__ == "__main__":
+	cli_usage = 'help msg here'
+	print('initializing ircbot')
 	bot = HacDCBot()
-	bot.start()
+	print('about to run update_on_change')
 	update_on_change(bot)
+	print('starting ircbot')
+	t = _RunThreaded(bot)
+	t.start()
+	die = False
+	while not die:
+		line = raw_input('bot.irc>>').strip()
+		if len(line) > 0:
+			args = []
+			cmd = line.split(' ',1)[0].replace(':','')
+			if len(line.split()) > 1: args = line.split()[1:]
+			if cmd == 'say':
+				bot.say(' '.join(args))
+			elif cmd == 'sayto' and len(args) > 1:
+				bot.sayto(args[0],' '.join(args[1:]))
+			elif cmd == 'cycle':
+				bot.cycle()
+			elif cmd == 'die':
+				bot.die()
+			else:
+				print(cli_usage)

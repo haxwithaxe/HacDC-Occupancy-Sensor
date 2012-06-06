@@ -3,14 +3,11 @@ import time
 import threading
 import pytty
 import json
-import comms
 from util import *
 from botutil import *
 from config import config as configmod
 
-config = configmod()
-socketdict = config.socketsdict
-config = config.config
+config = configmod().config
 
 class serial(threading.Thread):
 	def __init__(self):
@@ -21,9 +18,6 @@ class serial(threading.Thread):
 			cache = {'changed':'','status':False,'default':'','full':'','raw':''}
 			stash(json.dumps(cache))
 		self.config = config
-		self.con_sock = comms.server(config['serial.console'])
-		self.con_sock.start()
-		self.socketlist = []
 		self.state = None
 		self.changed = cache['changed'] or time.strftime(config['change_time_fmt'])
 		self.boolstate = cache['status']
@@ -31,7 +25,6 @@ class serial(threading.Thread):
 		self.notify = False
 		self.die = False
 		self.tty = pytty.TTY(self.config['serial.device'])
-		self.loadsockets()
 		threading.Thread.__init__( self )
 
 	def run(self):
@@ -44,7 +37,7 @@ class serial(threading.Thread):
 				rawmsgdict = None
 
 			if rawmsgdict:
-				debug('DEVICE SAYS: %s' % rawmsg)
+				debug('DEVICE SAYS: %s' % rawmsg,2)
 				self.state = rawmsgdict
 				current_boolstate = (0 < (self.state['hall_light'] + self.state['main_light'] + self.state['work_light'])) #+ self.state['main_pir'] + self.state['work_pir']
 
@@ -60,19 +53,7 @@ class serial(threading.Thread):
 					self.notify = False
 					self.pushupdate()
 				self.laststate = current_boolstate
-			for sock in self.socketlist:
-				if len(sock.msg) > 0:
-					for m in sock.msg:
-						self._handle_msgs(m)
 		# end while
-		return
-
-	def _handle_msgs(self,msg):
-		if len(str(msg)) < 1: return
-		if msg == config['update_flag']:
-			self.pushupdate()
-		elif msg == config['refresh_flag']:
-			self.update_cache()
 		return
 
 	def _get_status_str(self):
@@ -88,13 +69,6 @@ class serial(threading.Thread):
 
 	def pushupdate(self):
 		update_cache()
-		for sock in self.socketlist:
-				sock.send(self.config['update_flag'])
-
-	def loadsockets(self):
-		for sock in socketdict.values():
-			self.socketlist += [comms.server(sock)]
-			self.socketlist[-1].start()
 
 	def die(self):
 		self.die = True
@@ -103,3 +77,12 @@ class serial(threading.Thread):
 if __name__ == '__main__':
 	bot = serial()
 	bot.start()
+	die = False
+	while not die:
+		line = raw_input('bot.serial>>').strip()
+		if len(line) > 0:
+			if line == 'refresh':
+				bot.update_cache()
+			elif line in  ('die','stop'):
+				bot.die()
+				die = True

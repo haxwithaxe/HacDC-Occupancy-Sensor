@@ -23,10 +23,10 @@ class _update_on_change(threading.Thread):
 	def __init__(self,bot):
 		self.die = False
 		self.bot = bot
-		self.sock = self.bot.sock
 		threading.Thread.__init__(self)
 
 	def run(self):
+		time.sleep(7)
 		last_status = None
 		while not self.die:
 			status = unstash()
@@ -34,13 +34,6 @@ class _update_on_change(threading.Thread):
 			if last_status != status:
 				self.bot.update()
 				last_status = status
-			#msg = self.sock.msg[:]
-			#self.sock.clear_msg()
-			#if config['update_flag'] in [x.strip() for x in msg]:
-			#	self.bot.update()
-			#for m in msg:
-			#	if m.strip().startswith('pass:'):
-			#		bot.pass_msg(m.replace('pass:',1).strip())
 			time.sleep(0.1)
 
 	def die(self):
