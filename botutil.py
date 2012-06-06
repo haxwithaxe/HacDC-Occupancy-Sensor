@@ -29,9 +29,11 @@ class _update_on_change(threading.Thread):
 	def run(self):
 		last_status = None
 		while not self.die:
-			status = unstash('dict')
-			if last_status and last_status != status:
+			status = unstash()
+			if not last_status: last_status = status
+			if last_status != status:
 				self.bot.update()
+				last_status = status
 			#msg = self.sock.msg[:]
 			#self.sock.clear_msg()
 			#if config['update_flag'] in [x.strip() for x in msg]:
