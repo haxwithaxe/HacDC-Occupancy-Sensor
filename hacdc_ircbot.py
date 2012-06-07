@@ -17,6 +17,8 @@ HELPMSG = {
 	}
 MISSING_DATA_MSG='''My data is missing.'''
 
+default_statusdict = {'default':'','full':'','raw':''}
+
 config = configmod().config
 
 class HacDCBot(SingleServerIRCBot):
@@ -162,8 +164,7 @@ class HacDCBot(SingleServerIRCBot):
 	def _status_msg(self, c, args = [], chan = False):
 		msg = False
 		if not chan: chan = self.channel
-		statusdict = unstash('dict')
-		if not statusdict: msg = MISSING_DATA_MSG
+		statusdict = unstash('dict') or default_statusdict
 		if len(args) > 0:
 			arg1 = args[0].lower()
 		else:
@@ -181,7 +182,7 @@ class HacDCBot(SingleServerIRCBot):
 
 	def update(self):
 		print('update')
-		statusdict = unstash('dict')
+		statusdict = unstash('dict') or default_statusdict
 		self.say(statusdict['default'] or MISSING_DATA_MSG)
 
 	def pass_msg(self,msg):

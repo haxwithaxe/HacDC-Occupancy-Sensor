@@ -70,7 +70,7 @@ class serial(threading.Thread):
 	def pushupdate(self):
 		update_cache()
 
-	def die(self):
+	def _die(self):
 		self.die = True
 		self._Thread__stop()
 
@@ -84,5 +84,5 @@ if __name__ == '__main__':
 			if line == 'refresh':
 				bot.update_cache()
 			elif line in  ('die','stop'):
-				bot.die()
+				bot._die()
 				die = True

@@ -12,9 +12,11 @@ def stash(cachestr):
 	str2file(config['status_cache'],cachestr)
 
 def unstash(fmt = 'raw'):
+	output = None
 	contents = file2str(config['status_cache'])
-	if fmt == 'dict' and len(contents) > 1:
-		output = json.loads(contents)
+	if fmt == 'dict':
+		if len(contents) > 1:
+			output = json.loads(contents)
 	else:
 		output = contents
 	return output
