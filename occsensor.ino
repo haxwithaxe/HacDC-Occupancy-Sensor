@@ -68,17 +68,6 @@ inline void analogPullup(byte pin, boolean b) { digitalPullup(pin+54,b); }
 inline void analogPullup(byte pin, boolean b) { digitalPullup(pin+14,b); }
 #endif
 
-void delayLong(int delaymsVal) {
-	// delay for longer then 1000ms without things going wonky.
-	// "accurate" to 10ms
-	//float delayFloat = delaymsVal/100.0;
-	//unsigned long delayVal = (unsigned long)delayFloat;
-	//for (int m = 0; m < 100; m++) {
-	//	delay(delayVal);
-	//}
-  delay(delaymsVal);
-}
-
 boolean pirStat(int pir,int status){
 
 	if(digitalRead(pir) == HIGH){
@@ -125,8 +114,11 @@ void setup() {
 
 	digitalPullup(workPIR, LOW);
 
-	//delayLong(calibrationTime*1000);
-
+	int s;
+	for(s=0;s <= calibrationTime;s++){
+		Serial.println("calibrating sensors ...");
+		delay(980);
+	}
 }
 
 void loop() {

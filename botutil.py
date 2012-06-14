@@ -9,7 +9,7 @@ from config import config as configmod
 config = configmod().config
 
 def stash(cachestr):
-	str2file(config['status_cache'],cachestr)
+	str2file(cachestr,config['status_cache'])
 
 def unstash(fmt = 'raw'):
 	output = None
