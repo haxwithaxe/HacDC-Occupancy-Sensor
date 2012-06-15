@@ -1,27 +1,43 @@
 #!/usr/bin/env python
 
-from utils import *
-from botutils import *
+from util import *
+from botutil import *
+from config import config
 import urllib,urllib2
+import json
 
 conf = config().config
+debug = Debug(5,5)
 
-def get_status():
-	urlargs='?'
-	statusdict = file2json(conf['status_cache'],'dict')
-	if statusdict:
-		for k,v in statusdict.items():
-			if k == 'raw':
-				for sensor,state in json.loads(v).items():
-					urlargs+=sensor+'='+urllib.urlencode(str(state))
-			else:
-				urlargs+=k+'='+urllib.urlencode(str(v))
-	else:
-		urlargs = '?status-not-available=true'
-	return urlargs
+class remote_update(object):
+	def get_status(self):
+		debug.send('getting status',2)
+		statusdict = unstash('dict')
+		if statusdict:
+			urlargs = urllib.urlencode(statusdict)
+		else:
+			urlargs = None
+		debug.send('got status',2)
+		return urlargs
 
-def send_status(urlargs):
-	url = conf['remote_status_cache_url']
-	url += urlargs
-	rep = urllib2.urlopen(url)
-	debug(rep,5)
+	def send_status(self,urlargs):
+		debug.send('sending status',2)
+		url = conf['remote_status_cache_url']
+		url = '?'.join([url,urlargs])
+		debug.send(url,5)
+		rep = urllib2.urlopen(url)
+		debug.send(rep,5)
+		debug.send('sent status',2)
+
+	def update(self):
+		debug.send('updating ...',2)
+		urlargs = self.get_status()
+		if urlargs: self.send_status(urlargs)
+
+	def die(self):
+		pass
+		
+if __name__ == '__main__':
+	bot = remote_update()
+	bot.update()
+	#update_on_change(bot)

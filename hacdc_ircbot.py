@@ -113,7 +113,7 @@ class HacDCBot(SingleServerIRCBot):
 		return
 
 	def _isboss(self,nick):
-		if nick in config['boss_list']:
+		if nick in config['boss_list'].split(','):
 			return True
 		return False
 

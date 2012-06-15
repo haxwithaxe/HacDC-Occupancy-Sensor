@@ -3,6 +3,7 @@ import time
 import datetime
 import pytty
 import json
+from copy import deepcopy
 from util import *
 from botutil import *
 from config import config as configmod
@@ -11,7 +12,8 @@ config = configmod().config
 debug = Debug(5,5,'serialbot.log','[%Y/%m/%d %H:%M:%S GMT%z]')
 devlog = Debug(5,5,'serial_output.log','[%Y/%m/%d %H:%M:%S GMT%z]')
 
-DEFAULT_INTERVAL=3
+DEFAULT_INTERVAL = 3
+DENOISE_BUFFER_LEN = 5
 
 class serial:
 	def __init__(self):
@@ -27,7 +29,18 @@ class serial:
 		self.laststate = None
 		self.notify = False
 		self.die = False
+		self.denoise_buffer = []
 		self.tty = pytty.TTY(config['serial.device'])
+
+	def not_noise(self,signal):
+		if signal in self.denoise_buffer:
+			for i in self.denoise_buffer:
+				if signal != i:
+					return False
+					break
+			return True
+		else:
+			return False
 
 	def run(self):
 		while not self.die:
@@ -40,22 +53,24 @@ class serial:
 				rawmsgdict = False
 
 			if rawmsgdict and 'main_light' in rawmsgdict and 'work_light' in rawmsgdict and 'hall_light' in rawmsgdict:
-				debug.send('DEVICE SAYS: %s' % rawmsg,2)
-				self.state = rawmsgdict
-				current_boolstate = (0 < (self.state['hall_light'] + self.state['main_light'] + self.state['work_light'])) #+ self.state['main_pir'] + self.state['work_pir']
+				if self.not_noise(rawmsgdict):
+					self.state = rawmsgdict.copy()
+					current_boolstate = (0 < (self.state['hall_light'] + self.state['main_light'] + self.state['work_light'])) #+ self.state['main_pir'] + self.state['work_pir']
+				
+					if (self.boolstate != current_boolstate and self.laststate != current_boolstate):
+						debug.send('OCCSENSOR STATE SET: %s' % current_boolstate)
+						self.boolstate = current_boolstate
+						self.changed = time.time()
+						self.notify = True
 
-				if (self.boolstate != current_boolstate and self.laststate != current_boolstate):
-					debug.send('OCCSENSOR STATE SET: %s' % current_boolstate)
-					self.boolstate = current_boolstate
-					self.changed = time.time()
-					self.notify = True
+						stash(self._get_status_str())
 
-					stash(self._get_status_str())
-
-				if self.notify:
-					self.notify = False
-					self.pushupdate()
-				self.laststate = current_boolstate
+					if self.notify:
+						self.notify = False
+						self.pushupdate()
+					self.laststate = current_boolstate
+				self.denoise_buffer += [rawmsgdict.copy()]
+				if len(self.denoise_buffer) > DENOISE_BUFFER_LEN: self.denoise_buffer.pop(0)
 		# end while
 		return
 
@@ -64,7 +79,8 @@ class serial:
 		statusdict = {'changed':self.changed,'status':self.boolstate,'default':config['default_msg_fmt'],'full':config['full_msg_fmt'],'raw':config['raw_msg_fmt']}
 		statusdict['default'] = statusdict['default'] % ({True:'open',False:'closed'}[self.boolstate],datetime.datetime.fromtimestamp(self.changed).strftime(config['default_time_fmt']))
 		statusdict['full'] = statusdict['full'] % ({True:'open',False:'closed'}[self.state['hall_light']],{True:'open',False:'closed'}[self.state['main_light']],{True:'open',False:'closed'}[self.state['work_light']])
-		statusdict['raw'] = statusdict['raw'] % str(self.state)
+		statusdict['raw'] = statusdict['raw'] % json.dumps(self.state)
+		statusdict.update(self.state)
 		status = json.dumps(statusdict)
 		debug.send(('_get_status_str status',status),5)
 		return status
