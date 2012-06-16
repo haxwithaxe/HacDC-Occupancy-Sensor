@@ -119,27 +119,28 @@ class HacDCBot(SingleServerIRCBot):
 
 	def _handle_cmds(self, c, e, line):
 		debug.send('in _handle_cmds',5)
-		sendhelp = False
-		chan = self.channel
-		if chan == irc_lower(self.connection.get_nickname()): chan = irc_lower(nm_to_n(e.source()))
-		debug.send(('chan in _handle_cmds',chan),5)
-		cmd_args_list = line[0].lower()[1:].strip().split()
-		cmd = cmd_args_list[0]
-		debug.send(('cmd,line,cmd_args_list in _handle_cmds',cmd,line,cmd_args_list),5)
-		args = []
-		if len(cmd_args_list) > 1: args = [x.strip() for x in cmd_args_list[1:]]
-		debug.send(('args in _handle_cmds',args),5)
-		if len(args) > 1 and args[1] in HELPSTR:
-			sendhelp = True
-		if cmd == 'space':
-			if sendhelp:
-				self._send_help(c,cmd,chan)
+		if line and len(line) > 0:
+			sendhelp = False
+			chan = self.channel
+			if chan == irc_lower(self.connection.get_nickname()): chan = irc_lower(nm_to_n(e.source()))
+			debug.send(('chan in _handle_cmds',chan),5)
+			cmd_args_list = line[0].lower()[1:].strip().split()
+			cmd = cmd_args_list[0]
+			debug.send(('cmd,line,cmd_args_list in _handle_cmds',cmd,line,cmd_args_list),5)
+			args = []
+			if len(cmd_args_list) > 1: args = [x.strip() for x in cmd_args_list[1:]]
+			debug.send(('args in _handle_cmds',args),5)
+			if len(args) > 1 and args[1] in HELPSTR:
+				sendhelp = True
+			if cmd == 'space':
+				if sendhelp:
+					self._send_help(c,cmd,chan)
+				else:
+					self._status_msg(c,args,chan)
+			elif cmd == 'help':
+				self._send_help(c,cmd,args,chan)
 			else:
-				self._status_msg(c,args,chan)
-		elif cmd == 'help':
-			self._send_help(c,cmd,args,chan)
-		else:
-			self.do_command(e,cmd.lower())
+				self.do_command(e,cmd.lower())
 
 	def _handle_sock_cmd(self,cmd,args):
 		if cmd == 'say':

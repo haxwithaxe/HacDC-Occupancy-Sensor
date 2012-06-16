@@ -17,7 +17,7 @@ class Debug:
 		msg = [timestamp, str(repr(msg))]
 		for i in range(msg.count('')):
 			msg.remove('')
-		msg = ' '.join(msg)
+		msg = ' '.join(msg)+'\n'
 		if self.debug_level >= level:
 			print(msg)
 		if self.log_level >= level:
