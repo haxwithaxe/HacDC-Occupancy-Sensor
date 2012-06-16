@@ -78,7 +78,7 @@ class serial:
 		if self.state == None: return ''
 		statusdict = {'changed':self.changed,'status':self.boolstate,'default':config['default_msg_fmt'],'full':config['full_msg_fmt'],'raw':config['raw_msg_fmt']}
 		statusdict['default'] = statusdict['default'] % ({True:'open',False:'closed'}[self.boolstate],datetime.datetime.fromtimestamp(self.changed).strftime(config['default_time_fmt']))
-		statusdict['full'] = statusdict['full'] % ({True:'open',False:'closed'}[self.state['hall_light']],{True:'open',False:'closed'}[self.state['main_light']],{True:'open',False:'closed'}[self.state['work_light']])
+		statusdict['full'] = statusdict['full'] % ({True:'on',False:'off'}[self.state['hall_light']],{True:'on',False:'off'}[self.state['main_light']],{True:'on',False:'off'}[self.state['work_light']])
 		statusdict['raw'] = statusdict['raw'] % json.dumps(self.state)
 		statusdict.update(self.state)
 		status = json.dumps(statusdict)
