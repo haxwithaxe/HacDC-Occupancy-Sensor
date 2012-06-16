@@ -2,3 +2,4 @@ occsensor.conf
 *.pyc
 *.socket
 *.cache
+*.log

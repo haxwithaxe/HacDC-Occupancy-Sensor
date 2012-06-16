@@ -60,7 +60,7 @@ class HacDCBot(SingleServerIRCBot):
 				line += e.arguments()[1:]
 			else:
 				line = e.arguments()
-			if len(line) > 0:
+			if len(line) > 0 and line[0].strip()[0] in CMDPREFIX:
 				debug.send(('line of _handle_msg',line),5)
 				self._handle_cmds(c, e, line)
 		return
@@ -124,8 +124,15 @@ class HacDCBot(SingleServerIRCBot):
 			chan = self.channel
 			if chan == irc_lower(self.connection.get_nickname()): chan = irc_lower(nm_to_n(e.source()))
 			debug.send(('chan in _handle_cmds',chan),5)
-			cmd_args_list = line[0].lower()[1:].strip().split()
-			cmd = cmd_args_list[0]
+			word0 = line[0].strip()
+			if word0 and len(word0) > 0:
+				cmd_args_list = word0.lower()[1:].strip().split()
+			else:
+				return
+			if len(cmd_args_list) > 0:
+				cmd = cmd_args_list[0]
+			else:
+				return
 			debug.send(('cmd,line,cmd_args_list in _handle_cmds',cmd,line,cmd_args_list),5)
 			args = []
 			if len(cmd_args_list) > 1: args = [x.strip() for x in cmd_args_list[1:]]
