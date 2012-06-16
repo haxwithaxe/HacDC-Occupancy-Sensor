@@ -36,6 +36,7 @@ const int workLight = 2;
 const int workThreshold = 128;
 const int mainPIR = 11;
 const int workPIR = 12;
+const int hallPIR = 13; // CHECK ME
 const int ttl = 5000; // minimum frequency for data updates in ms
 const int calibrationTime = 30; // PIR calibration time in seconds
 const int waitForHigh = 10; // cycles to wait before considering the high value motion
@@ -46,15 +47,20 @@ boolean update = NO; // do i need to update?
 int timeout = 0; // last time the data was updated
 unsigned long lastHigh = 0;
 unsigned long firstHigh = 0;
+
 // light sensor states
 boolean hallLightState = OFF; // last state of the hall light
 boolean mainLightState = OFF; // last state of the main room light
 boolean workLightState = OFF; // last state of the work room light
+
 // PIR sensor states
 boolean mainPIRState = OFF; // last state of the main room PIR
 int mainPIRStatus = LOW;
 boolean workPIRState = OFF; // last state of the work room PIR
 int workPIRStatus = LOW;
+boolean hallPIRState = OFF; // last state of the hall PIR
+int hallPIRStatus = LOW;
+
 
 // info storage
 char json[256]; // json string
@@ -114,6 +120,8 @@ void setup() {
 
 	digitalPullup(workPIR, LOW);
 
+	digitalPullup(hallPIR, LOW);
+
 	int s;
 	for(s=0;s <= calibrationTime;s++){
 		Serial.println("calibrating sensors ...");
@@ -150,13 +158,17 @@ void loop() {
 
   if (workPIRState) update = YES;
 
+  hallPIRState = pirStat(hallPIR, hallPIRStatus);
+
+  if (hallPIRState) update = YES;
+
   // check to see if we need to send an update anyway
   if ( (millis() - last) >= ttl ) {
     update = YES;
   }
 
   if (update) {
-    sprintf(json, "{\"hall_light\":%d, \"main_light\":%d, \"work_light\":%d, \"main_pir\":%d, \"work_pir\":%d}", hallLightState, mainLightState, workLightState, mainPIRState, workPIRState);
+    sprintf(json, "{\"hall_light\":%d, \"main_light\":%d, \"work_light\":%d, \"main_pir\":%d, \"work_pir\":%d,\"hall_pir\":%d}", hallLightState, mainLightState, workLightState, mainPIRState, workPIRState, hallPIRState);
     Serial.println(json);
     last = millis();
     update = NO;
