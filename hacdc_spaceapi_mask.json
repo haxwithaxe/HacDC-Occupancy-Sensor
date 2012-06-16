@@ -1,0 +1,27 @@
+{
+  "api":"0.12",
+  "space":"HacDC",
+  "url":"http:\/\/hacdc.org",
+  "icon":{
+    "open":"",
+    "closed":""
+  },
+  "address":"1525 Newton St NW, Washington, DC 20010",
+  "contact":{
+    "phone":"+12025564225",
+    "twitter":"@hacdc",
+    "ml":"blabber@hacdc.org",
+    "irc":"irc:\/\/freenode.net\/#hacdc",
+    "email":"info@hacdc.org"
+  },
+  "logo":"http://www.hacdc.org/wp-content/themes/hacdc/images/home.png",
+  "sensors":[
+    {"light":{"work":true,"main":true,"hall":true}}
+  ],
+  "feeds":[
+    {"name":"Calendar","type":"text/calendar","url":"webcal:\/\/www.meetup.com\/hac-dc\/events\/ical\/HacDC\/"},
+    {"name":"Blog","type":"text/xml","url":"http:\/\/www.hacdc.info\/feed\/"}
+  ],
+  "lat":38.9336,
+  "lon":-77.035846
+}
