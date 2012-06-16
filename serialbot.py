@@ -14,6 +14,7 @@ devlog = Debug(5,5,'serial_output.log','[%Y/%m/%d %H:%M:%S GMT%z]')
 
 DEFAULT_INTERVAL = 3
 DENOISE_BUFFER_LEN = 5
+REQBITS = ['main_light','work_light','hall_light','hall_pir','main_pir','work_pir']
 
 class serial:
 	def __init__(self):
@@ -30,6 +31,7 @@ class serial:
 		self.notify = False
 		self.die = False
 		self.denoise_buffer = []
+		self.pir_buffer = []
 		self.tty = pytty.TTY(config['serial.device'])
 
 	def not_noise(self,signal):
@@ -42,6 +44,21 @@ class serial:
 		else:
 			return False
 
+	def has_all_bits(rawmsgdict):
+		for i in REQBITS:
+			if not i in rawmsgdict: return False
+		return True
+
+	def pir_boolstate(pir_states):
+		buff_len = 20
+		avg_state = pir_states[:]
+		for state in self.pir_buffer:
+			for i in range(len(state)):
+				avg_state[i] += state[i]
+		for i in avg_state:
+			if (i/buff_len) >= 1: return True
+		return False
+
 	def run(self):
 		while not self.die:
 			time.sleep(int(config['serial.check_device_every'] or DEFAULT_INTERVAL))
@@ -52,11 +69,12 @@ class serial:
 			except:
 				rawmsgdict = False
 
-			if rawmsgdict and 'main_light' in rawmsgdict and 'work_light' in rawmsgdict and 'hall_light' in rawmsgdict:
+			if rawmsgdict and self.has_all_bits(rawmsgdict):
 				if self.not_noise(rawmsgdict):
 					self.state = rawmsgdict.copy()
-					current_boolstate = (0 < (self.state['hall_light'] + self.state['main_light'] + self.state['work_light'])) #+ self.state['main_pir'] + self.state['work_pir']
-				
+					current_boolstate = ((0 < (self.state['hall_light'] + self.state['main_light'] + self.state['work_light'])) or self.pir_boolstate([self.state['hall_pir'],self.state['main_pir'],self.state['work_pir']]))
+
+
 					if (self.boolstate != current_boolstate and self.laststate != current_boolstate):
 						debug.send('OCCSENSOR STATE SET: %s' % current_boolstate)
 						self.boolstate = current_boolstate
@@ -78,7 +96,7 @@ class serial:
 		if self.state == None: return ''
 		statusdict = {'changed':self.changed,'status':self.boolstate,'default':config['default_msg_fmt'],'full':config['full_msg_fmt'],'raw':config['raw_msg_fmt']}
 		statusdict['default'] = statusdict['default'] % ({True:'open',False:'closed'}[self.boolstate],datetime.datetime.fromtimestamp(self.changed).strftime(config['default_time_fmt']))
-		statusdict['full'] = statusdict['full'] % ({True:'on',False:'off'}[self.state['hall_light']],{True:'on',False:'off'}[self.state['main_light']],{True:'on',False:'off'}[self.state['work_light']])
+		statusdict['full'] = statusdict['full'] % ({True:'on',False:'off'}[self.state['hall_light']],{True:'on',False:'off'}[self.state['main_light']],{True:'on',False:'off'}[self.state['work_light']],{True:'on',False:'off'}[self.state['hall_pir']],{True:'on',False:'off'}[self.state['main_pir']],{True:'on',False:'off'}[self.state['work_pir']])
 		statusdict['raw'] = statusdict['raw'] % json.dumps(self.state)
 		statusdict.update(self.state)
 		status = json.dumps(statusdict)
