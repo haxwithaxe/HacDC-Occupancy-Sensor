@@ -49,15 +49,41 @@ class serial:
 			if not i in rawmsgdict: return False
 		return True
 
-	def pir_boolstate(pir_states):
-		buff_len = 20
+	def append_pir_buffer(self,state):
+		self.pir_buffer += [state['main_pir'],state['work_pir'],state['hall_pir']]
+		if len(self.pir_buffer) > config['max_pir_buffer_length']: self.pir_buffer.pop(0)
+
+	def append_denoise_buffer(self,state):
+		self.denoise_buffer += [state['main_light'],state['work_light'],state['hall_light']]
+		if len(self.pir_buffer) > config['max_denoise_buffer_length']: self.denoise_buffer.pop(0)
+
+	def pir_10min_boolstate(self,pir_states):
+		10min_buff_len = int(60/int(config['auto_update_from_sensor'] or 5000))*10)-1
+		10min_buff = self.pir_buffer[-10min_buff_len:]
 		avg_state = pir_states[:]
-		for state in self.pir_buffer:
+		for state in 10min_buff:
 			for i in range(len(state)):
 				avg_state[i] += state[i]
 		for i in avg_state:
-			if (i/buff_len) >= 1: return True
+			if  i >= config['minimum_10min_motion_events']: return True
 		return False
+
+	def pir_1min_boolstate(self,pir_states):
+		1min_buff_len = int(60/int(config['auto_update_from_sensor'] or 5000))-1
+		1min_buff = self.pir_buffer[-1min_buff_len:]
+		avg_state = pir_states[:]
+		for state in 1min_buff:
+			for i in range(len(state)):
+				avg_state[i] += state[i]
+		for i in avg_state:
+			if  i >= config['minimum_1min_motion_events']: return True
+		return False
+
+	def pir_boolstate(self,pir_state):
+		if self.boolstate:
+			return self.pir_1min_boolstate(pir_state)
+		else:
+			return self.pir_10min_boolstate(pir_state)
 
 	def run(self):
 		while not self.die:
@@ -74,7 +100,6 @@ class serial:
 					self.state = rawmsgdict.copy()
 					current_boolstate = ((0 < (self.state['hall_light'] + self.state['main_light'] + self.state['work_light'])) or self.pir_boolstate([self.state['hall_pir'],self.state['main_pir'],self.state['work_pir']]))
 
-
 					if (self.boolstate != current_boolstate and self.laststate != current_boolstate):
 						debug.send('OCCSENSOR STATE SET: %s' % current_boolstate)
 						self.boolstate = current_boolstate
@@ -87,8 +112,9 @@ class serial:
 						self.notify = False
 						self.pushupdate()
 					self.laststate = current_boolstate
-				self.denoise_buffer += [rawmsgdict.copy()]
-				if len(self.denoise_buffer) > DENOISE_BUFFER_LEN: self.denoise_buffer.pop(0)
+				self.append_denoise_buffer(rawmsgdict.copy())
+				self.append_pir_buffer(rawmsgdict.copy())
+				#if len(self.denoise_buffer) > DENOISE_BUFFER_LEN: self.denoise_buffer.pop(0)
 		# end while
 		return
 
