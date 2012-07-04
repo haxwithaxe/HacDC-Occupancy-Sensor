@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import sys
+import time
 import threading
 from util import *
 from botutil import *
@@ -143,7 +144,7 @@ class HacDCBot(SingleServerIRCBot):
 				if sendhelp:
 					self._send_help(c,cmd,chan)
 				else:
-					self._status_msg(c,args,chan)
+					self._status_msg(args,chan)
 			elif cmd == 'help':
 				self._send_help(c,cmd,args,chan)
 			else:
@@ -170,16 +171,28 @@ class HacDCBot(SingleServerIRCBot):
 		else:
 			c.privmsg(chan, HELPMSG[cmd])
 
-	def _status_msg(self, c, args = [], chan = False):
+	def _get_status(self):
+		statusdict = unstash('dict')
+		if not statusdict or type(statusdict) != dict:
+			time.sleep(2)
+			return self._get_status()
+		elif len(statusdict['default']) > 0 and len(statusdict['full']) > 0 and len(statusdict['raw']) > 0:
+			return status_dict
+		else:
+			time.sleep(2)
+			return self._get_status()
+			
+
+	def _status_msg(self, args = [], chan = False):
 		msg = False
 		if not chan: chan = self.channel
-		statusdict = unstash('dict') or default_statusdict
+			statusdict = self._get_status()
 		if len(args) > 0:
 			arg1 = args[0].lower()
 		else:
 			arg1 = False
 		if not msg:
-			if not arg1:
+			if not arg1 or arg1 not in ['default','full','raw']:
 				msg = statusdict['default'] or MISSING_DATA_MSG
 			elif 'full' == arg1:
 				msg = statusdict['full'] or MISSING_DATA_MSG
@@ -191,8 +204,8 @@ class HacDCBot(SingleServerIRCBot):
 
 	def update(self):
 		print('update')
-		statusdict = unstash('dict') or default_statusdict
-		self.say(statusdict['default'] or MISSING_DATA_MSG)
+		
+		self._status_msg()
 
 	def pass_msg(self,msg):
 		bits = msg.split()
