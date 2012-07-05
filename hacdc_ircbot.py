@@ -177,7 +177,7 @@ class HacDCBot(SingleServerIRCBot):
 			time.sleep(2)
 			return self._get_status()
 		elif len(statusdict['default']) > 0 and len(statusdict['full']) > 0 and len(statusdict['raw']) > 0:
-			return status_dict
+			return statusdict
 		else:
 			time.sleep(2)
 			return self._get_status()
@@ -186,25 +186,24 @@ class HacDCBot(SingleServerIRCBot):
 	def _status_msg(self, args = [], chan = False):
 		msg = False
 		if not chan: chan = self.channel
-			statusdict = self._get_status()
+		statusdict = self._get_status()
 		if len(args) > 0:
 			arg1 = args[0].lower()
 		else:
 			arg1 = False
 		if not msg:
-			if not arg1 or arg1 not in ['default','full','raw']:
-				msg = statusdict['default'] or MISSING_DATA_MSG
-			elif 'full' == arg1:
+			if 'full' == arg1:
 				msg = statusdict['full'] or MISSING_DATA_MSG
 			elif 'raw' == arg1:
 				msg = statusdict['raw'] or MISSING_DATA_MSG
+			else:
+				msg = statusdict['default'] or MISSING_DATA_MSG
 		if msg:
 			self.sayto(chan,msg)
 		return
 
 	def update(self):
 		print('update')
-		
 		self._status_msg()
 
 	def pass_msg(self,msg):
@@ -256,5 +255,6 @@ if __name__ == "__main__":
 				bot.cycle()
 			elif cmd == 'die':
 				bot.die()
+				die = True
 			else:
 				print(cli_usage)
