@@ -1,0 +1,45 @@
+#!/bin/bash
+
+occ_start(){
+	echo "Starting occsensor system ..."
+	python $OCCSENSORDIR/serialbot.py -q &
+	echo -n $! > $PIDDIR/serialbot.pid
+	$OCCSENSORDIR/hacdc_ircbot.py -q &
+	echo -n $! > $PIDDIR/ircbot.pid
+	$OCCSENSORDIR/send_status.py -log &
+	echo -n $! > $PIDDIR/send_status.pid
+	$OCCSENSORDIR/tweetbot.py -log &
+	echo -n $! > $PIDDIR/tweetbot.pid
+}
+
+occ_stop(){
+	echo "Stopping occensor system ..."
+	kill -9 < $PIDDIR/serialbot.pid
+	kill -9 < $PIDDIR/ircbot.pid
+	kill -9 < $PIDDIR/send_status.pid
+	kill -9 < $PIDDIR/tweetbot.pid
+}
+occ_restart(){
+	occ_stop
+	occ_start
+}
+
+case $1 in
+	'start')
+		occ_start
+		break
+		;;
+	'stop')
+		occ_stop
+		break
+		;;
+	'restart')
+		occ_restart
+		break
+		;;
+	*)
+		echo "$0 (start|stop|restart)"
+		break
+		;;
+esac
+

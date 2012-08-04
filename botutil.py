@@ -3,6 +3,7 @@ DEBUG = True
 import json
 import threading
 import time
+import os
 from util import *
 from config import config as configmod
 
@@ -30,12 +31,17 @@ class _update_on_change(threading.Thread):
 	def run(self):
 		time.sleep(7)
 		last_status = None
+		last_mod_time = 0
 		while not self.die:
-			status = unstash()
-			if not last_status: last_status = status
-			if last_status != status:
-				self.bot.update()
-				last_status = status
+			mod_time = os.path.getmtime(config['status_cache'])
+			if last_mod_time and mod_time and (mod_time - last_mod_time) > 0:
+				last_mod_time = mod_time
+				status = unstash()
+				if not last_status: last_status = status
+				if last_status != status:
+					self.bot.update()
+					time.sleep(3)
+					last_status = status
 			time.sleep(0.1)
 
 	def die(self):

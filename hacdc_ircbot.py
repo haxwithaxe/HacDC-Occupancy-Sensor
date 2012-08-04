@@ -223,6 +223,11 @@ class HacDCBot(SingleServerIRCBot):
 		c = self.connection
 		c.privmsg(target,msg)
 
+	def action(self,msg,target = None):
+		c = self.connection
+		if not target: target = self.channel
+		c.action(target,msg)
+
 class _RunThreaded(threading.Thread):
 	def __init__(self,bot):
 		self.bot = bot
@@ -230,6 +235,10 @@ class _RunThreaded(threading.Thread):
 
 	def run(self):
 		self.bot.start()
+
+	def die(self):
+		self.bot.die()
+		self._Thread__stop()
 
 if __name__ == "__main__":
 	cli_usage = 'help msg here'
@@ -251,10 +260,15 @@ if __name__ == "__main__":
 				bot.say(' '.join(args))
 			elif cmd == 'sayto' and len(args) > 1:
 				bot.sayto(args[0],' '.join(args[1:]))
+			elif cmd in ['do','/me']:
+				bot.action(' '.join(args))
+			elif cmd == 'doto' and len(args) > 1:
+				bot.action(' '.join(args[1:]),args[0])
 			elif cmd == 'cycle':
 				bot.cycle()
 			elif cmd == 'die':
 				bot.die()
+				t.die()
 				die = True
 			else:
 				print(cli_usage)

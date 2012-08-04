@@ -39,5 +39,5 @@ class remote_update(object):
 		
 if __name__ == '__main__':
 	bot = remote_update()
-	bot.update()
-	#update_on_change(bot)
+	#bot.update()
+	update_on_change(bot)

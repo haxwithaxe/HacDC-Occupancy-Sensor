@@ -1,5 +1,6 @@
 import twitter
 import time
+import re
 import sys
 from config import config as configmod
 from util import *
@@ -8,11 +9,13 @@ from botutil import *
 config = configmod()
 socketdict = config.socketsdict
 config = config.config
+tweetre = re.compile('''.*''')
 
 class tweeter:
 	def __init__(self):
 		self.tweeter = None
 		self.cantweet = False
+		self.tweetre = re.compile()
 		try:
 			self.tweeter = twitter.Api( consumer_key=config['consumer_key'], consumer_secret=config['consumer_secret'], access_token_key=config['access_token_key'], access_token_secret=config['access_token_secret'])
 			self.cantwit = self.tweeter.VerifyCredentials()
@@ -27,7 +30,11 @@ class tweeter:
 
 	def update(self):
 		tweetmsg = unstash('dict')['default']
-		self.tweeter.tweet(tweetmsg)
+		if self.tweetre.match(tweetmsg):
+			self.tweeter.tweet(tweetmsg)
+			debug('Tweeted: '+tweetmsg)
+		else:
+			debug('Didn\'t tweet: '+tweetmsg)
 	
 	def pass_msg(self,cmd,args):
 		pass
