@@ -22,12 +22,13 @@ class remote_update(object):
 
 	def send_status(self,urlargs):
 		debug.send('sending status',2)
-		url = conf['remote_status_cache_url']
-		url = '?'.join([url,urlargs])
-		debug.send(url,5)
-		rep = urllib2.urlopen(url)
-		debug.send(rep,5)
-		debug.send('sent status',2)
+		urls = conf['remote_status_cache_url_list']
+		for url in json.loads(urls):
+			url = '?'.join([url,urlargs])
+			debug.send(url,5)
+			rep = urllib2.urlopen(url)
+			debug.send(rep,5)
+			debug.send('sent status to %s' % url,2)
 
 	def update(self):
 		debug.send('updating ...',2)
@@ -39,5 +40,4 @@ class remote_update(object):
 		
 if __name__ == '__main__':
 	bot = remote_update()
-	#bot.update()
 	update_on_change(bot)

@@ -34,6 +34,7 @@ class _update_on_change(threading.Thread):
 		last_mod_time = 0
 		while not self.die:
 			mod_time = os.path.getmtime(config['status_cache'])
+			if not last_mod_time: last_mod_time = mod_time - 1
 			if last_mod_time and mod_time and (mod_time - last_mod_time) > 0:
 				last_mod_time = mod_time
 				status = unstash()
